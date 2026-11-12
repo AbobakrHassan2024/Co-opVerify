@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Co-opVerify — محاكاة النظام</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0f2a44; --navy2:#173a5c; --teal:#0e7c7b; --teal-l:#e3f2f1;
+  --bg:#f4f6f8; --card:#fff; --line:#dfe4ea; --ink:#1d2733; --mut:#5d6b7a;
+  --ok:#1e8e5a; --ok-l:#e5f5ec; --bad:#c0392b; --bad-l:#fbeae8; --warn:#b7791f; --warn-l:#fdf3e1;
+  --r:10px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;font-size:15px}
+button,input,select{font:inherit}
+.hidden{display:none!important}
+td,dd,.chip span,.kv dd{unicode-bidi:plaintext}
+header.top{background:var(--navy);color:#fff;display:flex;align-items:center;gap:16px;padding:10px 20px;position:sticky;top:0;z-index:20}
+.brand{display:flex;align-items:center;gap:10px}
+.brand .logo{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,#19a3a1,#0e7c7b);display:grid;place-items:center;font-weight:700}
+.brand b{font-size:18px;letter-spacing:.3px}
+.brand small{display:block;color:#b8c7d6;font-size:12px}
+.spacer{flex:1}
+.chip{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:#fff;border-radius:999px;padding:5px 12px;font-size:13px;display:flex;gap:6px;align-items:center}
+.btn{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:500}
+.btn:hover{border-color:#b9c3cf}
+.btn.pri{background:var(--teal);border-color:var(--teal);color:#fff}
+.btn.pri:hover{background:#0b6a69}
+.btn.dark{background:transparent;color:#fff;border-color:rgba(255,255,255,.3)}
+.btn.sm{padding:5px 10px;font-size:13px}
+.btn.danger{color:var(--bad);border-color:#efc7c2}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.layout{display:grid;grid-template-columns:230px 1fr;min-height:calc(100vh - 56px)}
+nav.side{background:#fff;border-inline-end:1px solid var(--line);padding:16px 10px}
+nav.side a{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:8px;color:var(--ink);text-decoration:none;cursor:pointer;margin-bottom:4px}
+nav.side a.on{background:var(--teal-l);color:var(--teal);font-weight:600}
+nav.side a:hover:not(.on){background:#f1f4f7}
+nav.side .role{font-size:12px;color:var(--mut);padding:4px 12px 12px}
+main{padding:22px 26px;max-width:1250px;width:100%}
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:var(--mut);margin:0 0 18px;font-size:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+label.f{display:block;font-size:13px;color:var(--mut);margin-bottom:5px;font-weight:500}
+input[type=text],input[type=password],select{width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 11px;background:#fff}
+input:focus,select:focus{outline:2px solid #9fd3d2;border-color:var(--teal)}
+.field{margin-bottom:14px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}
+.seg button{border:0;background:none;padding:8px 14px;cursor:pointer}
+.seg button.on{background:var(--teal);color:#fff}
+.drop{border:2px dashed #c3ccd6;border-radius:var(--r);padding:22px;text-align:center;color:var(--mut);cursor:pointer;background:#fafbfc}
+.drop.has{border-color:var(--teal);background:var(--teal-l);color:var(--teal)}
+.badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:600;white-space:nowrap}
+.b-ok{background:var(--ok-l);color:var(--ok)} .b-bad{background:var(--bad-l);color:var(--bad)}
+.b-warn{background:var(--warn-l);color:var(--warn)} .b-mut{background:#eef1f4;color:var(--mut)}
+table.t{width:100%;border-collapse:collapse;font-size:14px}
+table.t th{background:#f6f8fa;color:var(--mut);font-weight:600;text-align:start;padding:10px;border-bottom:1px solid var(--line);font-size:13px}
+table.t td{padding:10px;border-bottom:1px solid #edf0f3;vertical-align:middle}
+table.t tr.click{cursor:pointer} table.t tr.click:hover td{background:#f7fbfb}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;direction:ltr;unicode-bidi:embed}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.kpi .v{font-size:26px;font-weight:700}
+.kpi .l{font-size:13px;color:var(--mut)}
+.steps{list-style:none;margin:0;padding:0}
+.steps li{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px dashed #e6eaee;color:var(--mut)}
+.steps li .ic{width:22px;height:22px;border-radius:50%;border:2px solid #cfd6de;flex:none;display:grid;place-items:center;font-size:12px;margin-top:1px}
+.steps li.run{color:var(--ink)} .steps li.run .ic{border-color:var(--teal);border-top-color:transparent;animation:sp .8s linear infinite}
+.steps li.done{color:var(--ink)} .steps li.done .ic{background:var(--teal);border-color:var(--teal);color:#fff}
+.steps li .d{font-size:12.5px;color:var(--mut)}
+@keyframes sp{to{transform:rotate(360deg)}}
+.bar{height:6px;background:#e7ecf0;border-radius:9px;overflow:hidden;margin-top:12px}
+.bar i{display:block;height:100%;background:var(--teal);width:0;transition:width .3s}
+.res{display:grid;grid-template-columns:1.25fr 1fr;gap:16px;align-items:start}
+.verdict{display:flex;align-items:center;gap:14px;padding:16px;border-radius:var(--r);margin-bottom:14px}
+.verdict.ok{background:var(--ok-l);border:1px solid #bfe3cf} .verdict.bad{background:var(--bad-l);border:1px solid #f0c4bf}
+.verdict .big{font-size:21px;font-weight:700}
+.verdict.ok .big{color:var(--ok)} .verdict.bad .big{color:var(--bad)}
+.gauge{margin-inline-start:auto;text-align:center}
+.gauge .n{font-size:24px;font-weight:700;direction:ltr}
+.gauge .l{font-size:12px;color:var(--mut)}
+.viewer{position:relative;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#e9edf1}
+.viewer canvas{display:block;width:100%;height:auto}
+.viewer canvas.ov{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.vtools{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:13.5px}
+.pages{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.pages button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:13px}
+.pages button.on{border-color:var(--teal);background:var(--teal-l);color:var(--teal);font-weight:600}
+.pages button .s{direction:ltr;display:inline-block;margin-inline-start:6px;font-weight:600}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:7px 14px;font-size:14px}
+.kv dt{color:var(--mut)} .kv dd{margin:0;word-break:break-all}
+.note{font-size:12.5px;color:var(--mut);background:#f6f8fa;border-radius:8px;padding:8px 10px;margin-top:10px;border-inline-start:3px solid #c3ccd6}
+.legend{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mut)}
+.legend i{width:90px;height:8px;border-radius:4px;background:linear-gradient(90deg,#2b5cff,#00d0e0,#ffe000,#ff2a00)}
+[dir=rtl] .legend i{background:linear-gradient(270deg,#2b5cff,#00d0e0,#ffe000,#ff2a00)}
+.login-wrap{min-height:calc(100vh - 56px);display:grid;place-items:center;padding:30px}
+.login{width:min(940px,100%);display:grid;grid-template-columns:1fr 1fr;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.login .hero{background:linear-gradient(160deg,var(--navy),var(--navy2) 60%,#11506a);color:#fff;padding:34px}
+.login .hero h2{margin:0 0 8px;font-size:24px}
+.login .hero p{color:#c9d6e2;line-height:1.8;font-size:14px}
+.login .hero ul{padding-inline-start:18px;color:#dbe6ef;font-size:13.5px;line-height:2}
+.login form{padding:34px}
+.demo{display:grid;gap:8px;margin-top:16px}
+.demo button{text-align:start;border:1px solid var(--line);background:#fafbfc;border-radius:8px;padding:9px 12px;cursor:pointer;display:flex;justify-content:space-between;gap:8px}
+.demo button:hover{border-color:var(--teal);background:var(--teal-l)}
+.err{color:var(--bad);font-size:13.5px;min-height:20px}
+.toast{position:fixed;bottom:22px;inset-inline-start:50%;transform:translateX(50%);background:var(--navy);color:#fff;padding:10px 18px;border-radius:9px;font-size:14px;z-index:50;opacity:0;transition:opacity .25s;pointer-events:none}
+[dir=ltr] .toast{transform:translateX(-50%)}
+.toast.on{opacity:1}
+.foot{color:var(--mut);font-size:12px;text-align:center;padding:18px}
+.tabs-inline{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.status-pick{display:flex;gap:8px;flex-wrap:wrap}
+.status-pick button{flex:1;min-width:120px}
+.status-pick button.on.p{background:var(--warn-l);border-color:var(--warn);color:var(--warn)}
+.status-pick button.on.a{background:var(--ok-l);border-color:var(--ok);color:var(--ok)}
+.status-pick button.on.e{background:var(--bad-l);border-color:var(--bad);color:var(--bad)}
+.empty{padding:30px;text-align:center;color:var(--mut)}
+.inline-edit{display:flex;gap:6px;align-items:center}
+.inline-edit input{width:130px;padding:5px 8px}
+@media (max-width:900px){
+  .layout{grid-template-columns:1fr} nav.side{display:flex;gap:4px;overflow:auto;border:0;border-bottom:1px solid var(--line);padding:8px}
+  nav.side .role{display:none} nav.side a{margin:0;white-space:nowrap}
+  .res,.grid2,.login{grid-template-columns:1fr} .kpis{grid-template-columns:repeat(2,1fr)} main{padding:16px}
+  .login .hero{display:none}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><div class="logo">CV</div><div><b>Co-opVerify</b><small data-i18n="tagline"></small></div></div>
+  <div class="spacer"></div>
+  <span id="userChip" class="chip hidden"></span>
+  <button class="btn dark sm" id="langBtn"></button>
+  <button class="btn dark sm hidden" id="logoutBtn" data-i18n="logout"></button>
+</header>
+<div id="root"></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+/* ============ i18n ============ */
+const I18N={
+ar:{
+tagline:"نظام كشف التلاعب في مستندات التدريب التعاوني",lang:"English",logout:"تسجيل الخروج",
+loginTitle:"تسجيل الدخول",username:"اسم المستخدم",password:"كلمة المرور",signin:"دخول",
+demoAcc:"حسابات تجريبية (كلمة المرور 1234)",badLogin:"اسم المستخدم أو كلمة المرور غير صحيحة",disabledAcc:"هذا الحساب معطّل",
+heroTitle:"محاكاة نظام Co-opVerify",heroText:"واجهة تجريبية تحاكي سير عمل النظام كما ورد في التقرير: يرفع المشرف الأكاديمي ملف PDF، فيحوّل النظام كل صفحة إلى صورة ويقسمها إلى مربعات، ثم يُخرج نموذج U-Net خريطة حرارية ودرجة لكل صفحة.",
+hero1:"ثلاثة أدوار: مشرف أكاديمي، موظف وحدة التدريب، مدير النظام",hero2:"خريطة حرارية توضّح مواضع التعديل المشتبه",hero3:"حالات المراجعة: قيد المراجعة، مؤكد سليم، مؤكد معدّل",hero4:"لا يغادر أي ملف المتصفح",
+r_supervisor:"مشرف أكاديمي",r_staff:"موظف وحدة التدريب التعاوني",r_admin:"مدير النظام",
+nav_upload:"رفع وتحليل مستند",nav_myhistory:"سجل تحليلاتي",nav_queue:"قائمة المراجعة",nav_history:"سجل التحليلات",nav_users:"إدارة المستخدمين",
+upTitle:"رفع وتحليل مستند",upSub:"ارفع ملف PDF لأحد نماذج التدريب التعاوني واربطه بالرقم الجامعي للطالب.",
+src:"مصدر المستند",srcSample:"نموذج تجريبي",srcFile:"ملف PDF من جهازي",
+formType:"نوع النموذج",f_start:"نموذج مباشرة متدرب",f_att:"نموذج الحضور",f_eval:"نموذج تقييم المشرف الميداني",
+scenario:"السيناريو",sc_auth:"نسخة أصلية",sc_edit:"نسخة معدّلة",
+simMode:"وضع المحاكاة لنتيجة النموذج",sim_auto:"تلقائي (حسب بصمة الملف)",sim_auth:"فرض نتيجة سليمة",sim_edit:"فرض وجود تعديل",
+dropHint:"اسحب ملف PDF هنا أو انقر للاختيار",studentId:"الرقم الجامعي للطالب",studentIdHint:"9 أرقام",analyze:"تحليل المستند",
+needId:"أدخل رقمًا جامعيًا صحيحًا من 9 أرقام",needFile:"اختر ملف PDF أولًا",notPdf:"الملف ليس بصيغة PDF",
+pipeline:"خط المعالجة",
+st_hash:"حساب بصمة الملف SHA-256",st_hash_d:"لضمان التتبع",
+st_conv:"تحويل صفحات PDF إلى صور",st_conv_d:"بدقة ثابتة 200 DPI",
+st_tile:"تقسيم كل صفحة إلى مربعات 512×512",st_tile_d:"بدل تصغير الصورة حتى لا تضيع آثار التعديل",
+st_unet:"تشغيل نموذج U-Net على كل صفحة",st_unet_d:"إخراج خريطة حرارية على مستوى البكسل",
+st_score:"حساب درجة كل صفحة ومقارنتها بالعتبة",st_score_d:"متوسط أعلى البكسلات اشتباهًا",
+st_meta:"قراءة البيانات الوصفية (PyMuPDF)",st_meta_d:"معلومات إضافية لا تدخل في الدرجة",
+st_save:"حفظ السجل وحذف ملف PDF المرفوع",st_save_d:"يُحفظ سجل التحليل فقط",
+pagesN:"صفحة",tilesN:"مربع",elapsed:"الزمن المنقضي",
+authentic:"سليم",suspicious:"مشتبه به",
+vAuth:"المستند سليم",vSusp:"المستند مشتبه به",
+vAuthD:"لم تبلغ درجة أي صفحة العتبة.",vSuspD:"بلغت درجة صفحة واحدة على الأقل العتبة، وأُنشئت حالة مراجعة بحالة «قيد المراجعة».",
+docScore:"درجة المستند",threshold:"العتبة",
+showHeat:"الخريطة الحرارية",opacity:"الشفافية",showTiles:"شبكة المربعات",low:"منخفض",high:"مرتفع",
+page:"صفحة",
+meta:"البيانات الوصفية للملف",metaNote:"تُعرض كمعلومات إضافية فقط ولا تدخل في حساب الدرجة، لأن البيانات الوصفية قابلة للتعديل.",
+m_creator:"البرنامج المنشئ",m_producer:"المُنتِج",m_created:"تاريخ الإنشاء",m_modified:"تاريخ التعديل",m_pages:"عدد الصفحات",
+record:"سجل التحليل",r_date:"التاريخ",r_user:"المستخدم",r_sid:"الرقم الجامعي",r_file:"الملف",r_hash:"بصمة الملف",r_verdict:"النتيجة",r_score:"الدرجة",r_status:"حالة المراجعة",r_form:"النموذج",
+s_none:"—",s_pending:"قيد المراجعة",s_auth:"مؤكد سليم",s_edit:"مؤكد معدّل",
+review:"قرار المراجعة",reviewD:"القرار النهائي لموظف وحدة التدريب التعاوني. عند إغلاق الحالة تُحذف صور الصفحات والخريطة الحرارية.",
+editSid:"تصحيح الرقم الجامعي",save:"حفظ",cancel:"إلغاء",edit:"تعديل",
+sidSaved:"تم تصحيح الرقم الجامعي دون إعادة رفع الملف",statusSaved:"تم تحديث حالة المراجعة",
+imgGone:"صور الصفحات غير محفوظة",imgGoneAuth:"لا تُحفظ صور صفحات المستندات السليمة؛ يبقى سجل التحليل فقط.",imgGoneClosed:"أُغلقت حالة المراجعة، فحُذفت صور الصفحات والخريطة الحرارية.",imgGoneSession:"صور هذا الملف كانت في جلسة سابقة ولم تعد متاحة.",
+back:"رجوع",open:"عرض",newAnalysis:"تحليل مستند آخر",
+histTitle:"سجل التحليلات",histSubOwn:"المستندات التي رفعتها.",histSubAll:"جميع التحليلات المحفوظة في قاعدة البيانات.",
+filterAll:"الكل",noRecords:"لا توجد سجلات",
+qTitle:"قائمة المراجعة",qSub:"المستندات المشتبه بها التي تنتظر قرار وحدة التدريب التعاوني.",
+k_total:"إجمالي التحليلات",k_susp:"مشتبه بها",k_pending:"قيد المراجعة",k_closed:"حالات مغلقة",
+uTitle:"إدارة المستخدمين",uSub:"إنشاء الحسابات وتعديلها وتعطيلها وتعيين الأدوار. كلمات المرور تُحفظ مُجزّأة (Hash).",
+u_name:"الاسم",u_user:"اسم المستخدم",u_role:"الدور",u_state:"الحالة",u_hash:"تجزئة كلمة المرور",u_act:"إجراءات",
+active:"مفعّل",disabled:"معطّل",enable:"تفعيل",disable:"تعطيل",addUser:"إضافة مستخدم",create:"إنشاء",
+userExists:"اسم المستخدم مستخدم مسبقًا",userCreated:"تم إنشاء الحساب",fillAll:"أكمل جميع الحقول",cantSelf:"لا يمكنك تعطيل حسابك",
+resetDemo:"إعادة ضبط بيانات المحاكاة",resetDone:"أُعيدت بيانات المحاكاة",
+foot:"نموذج محاكاة لأغراض العرض — نتائج النموذج مُحاكاة ولا تمثل نموذج U-Net المدرَّب. جميع المعالجة داخل المتصفح.",
+simTag:"نتيجة مُحاكاة",pdfFail:"تعذّر عرض صفحات الملف؛ تُعرض صفحة بديلة.",
+ago_now:"الآن"
+},
+en:{
+tagline:"Co-op Training Document Tampering Detection",lang:"العربية",logout:"Log out",
+loginTitle:"Sign in",username:"Username",password:"Password",signin:"Sign in",
+demoAcc:"Demo accounts (password 1234)",badLogin:"Incorrect username or password",disabledAcc:"This account is disabled",
+heroTitle:"Co-opVerify simulation",heroText:"A prototype that simulates the workflow described in the report: an academic supervisor uploads a PDF, each page becomes an image cut into tiles, and a U-Net model returns a heatmap and a score per page.",
+hero1:"Three roles: academic supervisor, Co-op Unit staff, administrator",hero2:"Heatmap showing where the suspected edit is",hero3:"Review statuses: pending, confirmed authentic, confirmed edited",hero4:"No file leaves the browser",
+r_supervisor:"Academic supervisor",r_staff:"Co-op Unit staff",r_admin:"Administrator",
+nav_upload:"Upload & analyze",nav_myhistory:"My analyses",nav_queue:"Review queue",nav_history:"Analysis history",nav_users:"User management",
+upTitle:"Upload & analyze a document",upSub:"Upload the PDF of a co-op form and link it to the student's university ID.",
+src:"Document source",srcSample:"Sample form",srcFile:"PDF from my device",
+formType:"Form type",f_start:"Trainee start form",f_att:"Attendance form",f_eval:"Field supervisor evaluation form",
+scenario:"Scenario",sc_auth:"Authentic copy",sc_edit:"Edited copy",
+simMode:"Simulated model outcome",sim_auto:"Automatic (from file hash)",sim_auth:"Force authentic",sim_edit:"Force edited",
+dropHint:"Drop a PDF here or click to choose",studentId:"Student university ID",studentIdHint:"9 digits",analyze:"Analyze document",
+needId:"Enter a valid 9-digit university ID",needFile:"Choose a PDF file first",notPdf:"The file is not a PDF",
+pipeline:"Processing pipeline",
+st_hash:"Compute SHA-256 file hash",st_hash_d:"For traceability",
+st_conv:"Convert PDF pages to images",st_conv_d:"At a fixed 200 DPI",
+st_tile:"Cut each page into 512×512 tiles",st_tile_d:"Instead of resizing, so tampering traces are kept",
+st_unet:"Run the U-Net model on each page",st_unet_d:"Pixel-level heatmap output",
+st_score:"Score each page and compare to threshold",st_score_d:"Mean of the most suspicious pixels",
+st_meta:"Read metadata (PyMuPDF)",st_meta_d:"Extra information, not part of the score",
+st_save:"Save record and delete uploaded PDF",st_save_d:"Only the analysis record is kept",
+pagesN:"page(s)",tilesN:"tiles",elapsed:"Elapsed",
+authentic:"Authentic",suspicious:"Suspicious",
+vAuth:"Document is Authentic",vSusp:"Document is Suspicious",
+vAuthD:"No page score reached the threshold.",vSuspD:"At least one page score reached the threshold; a review case was created with status “pending”.",
+docScore:"Document score",threshold:"Threshold",
+showHeat:"Heatmap",opacity:"Opacity",showTiles:"Tile grid",low:"Low",high:"High",
+page:"Page",
+meta:"File metadata",metaNote:"Shown as extra information only and not used in the score, because metadata can be edited.",
+m_creator:"Creator",m_producer:"Producer",m_created:"Created",m_modified:"Modified",m_pages:"Pages",
+record:"Analysis record",r_date:"Date",r_user:"User",r_sid:"Student ID",r_file:"File",r_hash:"File hash",r_verdict:"Verdict",r_score:"Score",r_status:"Review status",r_form:"Form",
+s_none:"—",s_pending:"Pending",s_auth:"Confirmed authentic",s_edit:"Confirmed edited",
+review:"Review decision",reviewD:"Final decision by Co-op Unit staff. Closing the case deletes the page images and heatmap.",
+editSid:"Correct student ID",save:"Save",cancel:"Cancel",edit:"Edit",
+sidSaved:"Student ID corrected without re-uploading the file",statusSaved:"Review status updated",
+imgGone:"Page images not retained",imgGoneAuth:"Page images of authentic documents are not kept; only the analysis record remains.",imgGoneClosed:"The review case is closed, so the page images and heatmap were deleted.",imgGoneSession:"This file's images belonged to an earlier session and are no longer available.",
+back:"Back",open:"Open",newAnalysis:"Analyze another document",
+histTitle:"Analysis history",histSubOwn:"Documents you uploaded.",histSubAll:"All analyses saved in the database.",
+filterAll:"All",noRecords:"No records",
+qTitle:"Review queue",qSub:"Suspicious documents awaiting the Co-op Unit's decision.",
+k_total:"Total analyses",k_susp:"Suspicious",k_pending:"Pending",k_closed:"Closed cases",
+uTitle:"User management",uSub:"Create, edit and disable accounts and assign roles. Passwords are stored hashed.",
+u_name:"Name",u_user:"Username",u_role:"Role",u_state:"State",u_hash:"Password hash",u_act:"Actions",
+active:"Active",disabled:"Disabled",enable:"Enable",disable:"Disable",addUser:"Add user",create:"Create",
+userExists:"Username already exists",userCreated:"Account created",fillAll:"Fill in all fields",cantSelf:"You cannot disable your own account",
+resetDemo:"Reset simulation data",resetDone:"Simulation data reset",
+foot:"Demonstration prototype — model outputs are simulated and do not come from the trained U-Net. All processing happens in the browser.",
+simTag:"Simulated result",pdfFail:"Could not render the file's pages; showing a placeholder page.",
+ago_now:"now"
+}};
+let lang='ar';
+const t=k=>(I18N[lang][k]??I18N.en[k]??k);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $=s=>document.querySelector(s);
+const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+
+/* ============ utils ============ */
+async function sha256(data){
+  const buf=typeof data==='string'?new TextEncoder().encode(data):data;
+  const h=await crypto.subtle.digest('SHA-256',buf);
+  return [...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function rng(seed){let a=seed>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function toast(m){const e=$('#toast');e.textContent=m;e.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(()=>e.classList.remove('on'),2400)}
+function fmtDate(iso){if(!iso)return'—';const d=new Date(iso);if(isNaN(d))return esc(iso);
+  return d.toLocaleString(lang==='ar'?'ar-SA-u-ca-gregory-nu-latn':'en-GB',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}
+const THRESH=0.50;
+
+/* ============ data ============ */
+let db, session=null, view={name:'upload'}, pageCache={}, freshId=null;
+async function seed(){
+  const mk=async(id,name,username,role)=>({id,name,username,role,active:true,pw:await sha256('coop:'+username+':1234')});
+  const users=[
+    await mk(1,'د. سارة آل منصور','supervisor','supervisor'),
+    await mk(2,'أ. نورة اليامي','staff','staff'),
+    await mk(3,'م. فهد القحطاني','admin','admin'),
+    await mk(4,'د. علي الصقور','supervisor2','supervisor')];
+  const now=Date.now(),day=864e5;
+  const records=[];
+  const add=async(o)=>{const hash=await sha256('seed'+o.seed);const pages=samplePages(o.form,o.edited,o.seed);
+    const scores=pages.map(p=>p.score),score=Math.max(...scores);
+    records.push({id:records.length+1,date:new Date(now-o.ago*day).toISOString(),userId:o.user,studentId:o.sid,fileName:o.file,hash,
+      kind:'sample',form:o.form,edited:o.edited,seed:o.seed,pageScores:scores,score,verdict:score>=THRESH?'suspicious':'authentic',
+      status:score>=THRESH?(o.status||'pending'):null,imagesKept:score>=THRESH&&(!o.status||o.status==='pending'),meta:sampleMeta(o.form,o.edited,o.ago)})};
+  await add({seed:101,form:'eval',edited:true,user:1,sid:'444301122',file:'تقييم_المشرف_الميداني.pdf',ago:3,status:'edit'});
+  await add({seed:102,form:'start',edited:false,user:1,sid:'444305510',file:'مباشرة_متدرب.pdf',ago:2});
+  await add({seed:103,form:'att',edited:true,user:4,sid:'443402219',file:'Attendance_Form.pdf',ago:1});
+  await add({seed:104,form:'eval',edited:false,user:4,sid:'444300874',file:'evaluation_scan.pdf',ago:0.3});
+  await add({seed:105,form:'start',edited:true,user:1,sid:'442303388',file:'start_form_signed.pdf',ago:0.1});
+  return {users,records,nextUser:5};
+}
+const save=()=>store.set('cv_db',db);
+
+/* ============ synthetic forms (drawn on canvas) ============ */
+const PW=794,PH=1123;
+const STUD={name:'ريم سعيد آل سالم',company:'شركة الأفق للحلول التقنية',city:'نجران',sup:'م. خالد العتيبي',major:'نظم المعلومات'};
+function line(ctx,x1,y1,x2,y2,c='#333',w=1){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke()}
+function txt(ctx,s,x,y,o={}){ctx.save();ctx.font=`${o.w||400} ${o.size||16}px ${o.fam||'"IBM Plex Sans Arabic"'}`;ctx.fillStyle=o.c||'#222';ctx.direction='rtl';ctx.textAlign=o.align||'right';ctx.fillText(s,x,y);ctx.restore()}
+// edited value: pasted patch + slightly different rendering; returns region in fractions
+function editedTxt(ctx,s,x,y,o={}){
+  ctx.save();ctx.font=`${o.w||400} ${(o.size||16)}px "IBM Plex Sans Arabic"`;const w=ctx.measureText(s).width;ctx.restore();
+  const align=o.align||'right';const x0=align==='center'?x-w/2:align==='right'?x-w:x;
+  ctx.fillStyle='#fefefe';ctx.fillRect(x0-6,y-(o.size||16)-3,w+12,(o.size||16)+10);
+  txt(ctx,s,x+0.6,y+1.2,{...o,size:(o.size||16)+0.6,c:'#1b1b1b'});
+  return {x:(x0-8)/PW,y:(y-(o.size||16)-6)/PH,w:(w+16)/PW,h:((o.size||16)+14)/PH};
+}
+function header(ctx,title){
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,PW,PH);
+  txt(ctx,'المملكة العربية السعودية',740,60,{size:14,w:600});txt(ctx,'وزارة التعليم',740,82,{size:14});txt(ctx,'جامعة نجران',740,104,{size:14,w:600});
+  txt(ctx,'كلية علوم الحاسب ونظم المعلومات',54,60,{size:14,align:'left'});txt(ctx,'وحدة التدريب التعاوني',54,82,{size:14,align:'left'});
+  ctx.strokeStyle='#0e5f6e';ctx.lineWidth=2;ctx.beginPath();ctx.arc(PW/2,80,30,0,7);ctx.stroke();txt(ctx,'جامعة',PW/2,76,{size:11,align:'center',c:'#0e5f6e'});txt(ctx,'نجران',PW/2,92,{size:11,align:'center',c:'#0e5f6e'});
+  line(ctx,50,128,744,128,'#0e5f6e',2);
+  txt(ctx,title,PW/2,175,{size:22,w:700,align:'center',c:'#0e3a4a'});
+}
+function stampSig(ctx,y){
+  txt(ctx,'المشرف الميداني: '+STUD.sup,740,y,{size:15});txt(ctx,'التوقيع:',740,y+40,{size:15});
+  ctx.strokeStyle='#1d3f8f';ctx.lineWidth=1.6;ctx.beginPath();ctx.moveTo(560,y+42);ctx.bezierCurveTo(590,y+10,600,y+60,630,y+30);ctx.bezierCurveTo(650,y+15,655,y+50,680,y+36);ctx.stroke();
+  ctx.save();ctx.globalAlpha=.75;ctx.strokeStyle='#2948a8';ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(150,y+20,58,0,7);ctx.stroke();ctx.lineWidth=1;ctx.beginPath();ctx.arc(150,y+20,46,0,7);ctx.stroke();
+  txt(ctx,'شركة الأفق',150,y+12,{size:13,align:'center',c:'#2948a8',w:600});txt(ctx,'للحلول التقنية',150,y+30,{size:12,align:'center',c:'#2948a8'});txt(ctx,'نجران',150,y+48,{size:10,align:'center',c:'#2948a8'});ctx.restore();
+}
+function drawForm(ctx,form,edited){
+  const regions=[];
+  if(form==='start'){
+    header(ctx,'نموذج مباشرة متدرب');
+    const rows=[['اسم المتدرب',STUD.name],['الرقم الجامعي','444301122'],['التخصص',STUD.major],['جهة التدريب',STUD.company],['المدينة',STUD.city],['تاريخ المباشرة','2026/06/14'],['مدة التدريب','8 أسابيع'],['القسم المسؤول','إدارة تقنية المعلومات']];
+    let y=250;rows.forEach(([k,v],i)=>{txt(ctx,k+':',740,y,{size:16,w:600});
+      if(edited&&i===5)regions.push(editedTxt(ctx,'2026/06/07',560,y,{size:16}));else txt(ctx,v,560,y,{size:16});
+      line(ctx,250,y+10,560,y+10,'#999',.8);y+=58});
+    txt(ctx,'نفيدكم بأن المتدرب المذكور أعلاه قد باشر التدريب التعاوني لدينا في التاريخ الموضح،',740,y+30,{size:15});
+    txt(ctx,'وتفضلوا بقبول فائق الاحترام والتقدير.',740,y+60,{size:15});
+    stampSig(ctx,y+130);
+  }else if(form==='att'){
+    header(ctx,'نموذج الحضور والغياب');
+    txt(ctx,'اسم المتدرب: '+STUD.name,740,225,{size:15});txt(ctx,'الرقم الجامعي: 443402219',330,225,{size:15});
+    txt(ctx,'جهة التدريب: '+STUD.company,740,255,{size:15});
+    const cols=[740,600,450,300,54],heads=['الأسبوع','أيام الحضور','أيام الغياب','ملاحظات'];
+    let y=290;ctx.fillStyle='#e8f1f2';ctx.fillRect(54,y,686,40);
+    heads.forEach((h,i)=>txt(ctx,h,(cols[i]+cols[i+1])/2,y+26,{size:15,w:600,align:'center'}));
+    const data=[[5,0,''],[5,0,''],[2,3,'إجازة مرضية'],[5,0,''],[4,1,'غياب بعذر'],[5,0,''],[5,0,''],[5,0,'']];
+    for(let i=0;i<=9;i++)line(ctx,54,y+i*40,740,y+i*40,'#555',1);
+    cols.forEach(c=>line(ctx,c,y,c,y+9*40,'#555',1));
+    data.forEach((r,i)=>{const yy=y+40*(i+1)+26;txt(ctx,'الأسبوع '+(i+1),670,yy,{size:15,align:'center'});
+      if(edited&&i===2){regions.push(editedTxt(ctx,'5',525,yy,{size:15,align:'center'}));regions.push(editedTxt(ctx,'0',375,yy,{size:15,align:'center'}));txt(ctx,'',177,yy)}
+      else{txt(ctx,String(r[0]),525,yy,{size:15,align:'center'});txt(ctx,String(r[1]),375,yy,{size:15,align:'center'});txt(ctx,r[2],177,yy,{size:14,align:'center'})}});
+    const yt=y+40*9+30;txt(ctx,'إجمالي أيام الحضور:',740,yt+10,{size:15,w:600});
+    if(edited)regions.push(editedTxt(ctx,'39 يومًا',560,yt+10,{size:15}));else txt(ctx,'36 يومًا',560,yt+10,{size:15});
+    stampSig(ctx,yt+90);
+  }else{
+    header(ctx,'نموذج تقييم المشرف الميداني');
+    txt(ctx,'اسم المتدرب: '+STUD.name,740,225,{size:15});txt(ctx,'الرقم الجامعي: 444301122',330,225,{size:15});
+    const cols=[740,330,200,54];let y=260;ctx.fillStyle='#e8f1f2';ctx.fillRect(54,y,686,40);
+    ['معيار التقييم','الدرجة العظمى','الدرجة المستحقة'].forEach((h,i)=>txt(ctx,h,(cols[i]+cols[i+1])/2,y+26,{size:15,w:600,align:'center'}));
+    const crit=[['الالتزام بالحضور والمواعيد',15,13],['المعرفة الفنية والتخصصية',20,14],['جودة إنجاز المهام',20,15],['التواصل والعمل الجماعي',15,12],['المبادرة وحل المشكلات',15,11],['السلوك والانضباط المهني',15,13]];
+    for(let i=0;i<=8;i++)line(ctx,54,y+i*40,740,y+i*40,'#555',1);cols.forEach(c=>line(ctx,c,y,c,y+8*40,'#555',1));
+    crit.forEach((r,i)=>{const yy=y+40*(i+1)+26;txt(ctx,r[0],725,yy,{size:15});txt(ctx,String(r[1]),265,yy,{size:15,align:'center'});
+      if(edited&&i===1)regions.push(editedTxt(ctx,'19',127,yy,{size:15,align:'center'}));else txt(ctx,String(r[2]),127,yy,{size:15,align:'center'})});
+    const yy=y+40*7+26;txt(ctx,'المجموع',725,yy,{size:15,w:700});txt(ctx,'100',265,yy,{size:15,w:700,align:'center'});
+    if(edited)regions.push(editedTxt(ctx,'83',127,yy,{size:15,w:700,align:'center'}));else txt(ctx,'78',127,yy,{size:15,w:700,align:'center'});
+    txt(ctx,'ملاحظات المشرف: متدربة ملتزمة وتحتاج إلى مزيد من التطوير في الجوانب الفنية.',740,y+8*40+50,{size:14});
+    stampSig(ctx,y+8*40+120);
+  }
+  return regions;
+}
+function formRegions(form,edited){const c=document.createElement('canvas');c.width=PW;c.height=PH;return drawForm(c.getContext('2d'),form,edited)}
+
+/* ============ heatmap model (simulated U-Net output) ============ */
+const HW=100,HH=141;
+function genHeat(seedN,regions,base){
+  const r=rng(seedN),d=new Float32Array(HW*HH);
+  for(let i=0;i<d.length;i++)d[i]=r()*base*.45;
+  for(let k=0;k<7;k++){const cx=.12+r()*.76,cy=.18+r()*.7,sx=.02+r()*.06,sy=.008+r()*.015,a=base*(.5+r()*.6);
+    for(let y=0;y<HH;y++)for(let x=0;x<HW;x++){const dx=(x/HW-cx)/sx,dy=(y/HH-cy)/sy;d[y*HW+x]+=a*Math.exp(-(dx*dx+dy*dy)/2)}}
+  for(const g of regions){const s=.82+r()*.14,sg=.012;
+    for(let y=0;y<HH;y++)for(let x=0;x<HW;x++){const px=(x+.5)/HW,py=(y+.5)/HH;
+      const dx=Math.max(g.x-px,0,px-(g.x+g.w)),dy=Math.max(g.y-py,0,py-(g.y+g.h));
+      d[y*HW+x]=Math.max(d[y*HW+x],s*(.88+.12*r())*Math.exp(-(dx*dx+dy*dy)/(2*sg*sg)))}}
+  // light blur
+  const o=new Float32Array(d.length);
+  for(let y=0;y<HH;y++)for(let x=0;x<HW;x++){let s=0,n=0;for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){const xx=x+i,yy=y+j;if(xx>=0&&yy>=0&&xx<HW&&yy<HH){s+=d[yy*HW+xx];n++}}o[y*HW+x]=Math.min(1,s/n)}
+  return o;
+}
+function pageScore(h){const a=Array.from(h).sort((x,y)=>y-x);const k=Math.max(10,Math.round(a.length*.003));let s=0;for(let i=0;i<k;i++)s+=a[i];return s/k}
+function samplePages(form,edited,seedN){const regs=edited?formRegions(form,true):[];const heat=genHeat(seedN,regs,.26);return [{heat,score:pageScore(heat),form,edited}]}
+function sampleMeta(form,edited,agoDays){
+  const c=new Date(Date.now()-(agoDays+6)*864e5),m=new Date(c.getTime()+(edited?4.3*864e5:0));
+  if(form==='eval'&&!edited)return{creator:'Canon iR-ADV C5535 Scan',producer:'Canon PDF Platform',created:c.toISOString(),modified:c.toISOString()};
+  return edited?{creator:'Microsoft® Word for Microsoft 365',producer:'Adobe Acrobat Pro (64-bit) 24.2.2',created:c.toISOString(),modified:m.toISOString()}
+               :{creator:'Microsoft® Word for Microsoft 365',producer:'Microsoft® Word for Microsoft 365',created:c.toISOString(),modified:c.toISOString()};
+}
+function colorize(v){const s=[[0,[43,92,255]],[.35,[0,208,224]],[.65,[255,224,0]],[1,[255,42,0]]];
+  for(let i=1;i<s.length;i++)if(v<=s[i][0]){const f=(v-s[i-1][0])/(s[i][0]-s[i-1][0]);return s[i-1][1].map((c,j)=>Math.round(c+(s[i][1][j]-c)*f))}return s[3][1]}
+
+/* ============ pdf ============ */
+let pdfReady=false;
+try{if(window.pdfjsLib){const blob=new Blob(["importScripts('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js')"],{type:'application/javascript'});
+  pdfjsLib.GlobalWorkerOptions.workerPort=new Worker(URL.createObjectURL(blob));pdfReady=true}}catch(e){pdfReady=false}
+function pdfDate(s){if(!s)return null;const m=/D:(\d{4})(\d{2})?(\d{2})?(\d{2})?(\d{2})?(\d{2})?/.exec(s);if(!m)return s;
+  return new Date(Date.UTC(+m[1],(+m[2]||1)-1,+m[3]||1,+m[4]||0,+m[5]||0,+m[6]||0)).toISOString()}
+function regexMeta(buf){const s=new TextDecoder('latin1').decode(new Uint8Array(buf));const g=k=>{const m=new RegExp('/'+k+'\\s*\\(([^)]*)\\)').exec(s);return m?m[1].replace(/\\(.)/g,'$1'):null};
+  const n=(s.match(/\/Type\s*\/Page[^s]/g)||[]).length||1;return{creator:g('Creator'),producer:g('Producer'),created:pdfDate(g('CreationDate')),modified:pdfDate(g('ModDate')),pages:n}}
+function placeholderPage(name){const c=document.createElement('canvas');c.width=PW;c.height=PH;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,PW,PH);
+  x.fillStyle='#e9edf1';for(let i=0;i<14;i++)x.fillRect(80,180+i*55,(i%3?634:420),14);txt(x,name,PW/2,110,{size:18,align:'center',w:600});return c}
+async function loadPdf(buf,name){
+  let meta=regexMeta(buf),pages=[];
+  if(pdfReady){try{
+    const doc=await pdfjsLib.getDocument({data:new Uint8Array(buf.slice(0))}).promise;
+    try{const md=await doc.getMetadata();const i=md.info||{};meta={creator:i.Creator||meta.creator,producer:i.Producer||meta.producer,created:pdfDate(i.CreationDate)||meta.created,modified:pdfDate(i.ModDate)||meta.modified}}catch(e){}
+    meta.pages=doc.numPages;
+    for(let p=1;p<=Math.min(doc.numPages,6);p++){const pg=await doc.getPage(p);const v0=pg.getViewport({scale:1});const vp=pg.getViewport({scale:PW/v0.width});
+      const c=document.createElement('canvas');c.width=Math.round(vp.width);c.height=Math.round(vp.height);const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);
+      await pg.render({canvasContext:ctx,viewport:vp}).promise;pages.push(c)}
+    return {meta,pages,ok:true};
+  }catch(e){console.log('pdf render failed',e)}}
+  const n=Math.min(meta.pages||1,6);for(let i=0;i<n;i++)pages.push(placeholderPage(name));
+  return {meta,pages,ok:false};
+}
+
+/* ============ rendering shell ============ */
+function applyLang(){document.documentElement.lang=lang;document.documentElement.dir=lang==='ar'?'rtl':'ltr';
+  document.title=lang==='ar'?'Co-opVerify — محاكاة النظام':'Co-opVerify — System simulation';
+  $('#langBtn').textContent=t('lang');document.querySelectorAll('[data-i18n]').forEach(e=>e.textContent=t(e.dataset.i18n))}
+const me=()=>db.users.find(u=>u.id===session);
+const navFor=role=>({supervisor:['upload','myhistory'],staff:['queue','history'],admin:['users','history']}[role]);
+const icons={upload:'⬆',myhistory:'🗂',queue:'⚑',history:'🗂',users:'👥'};
+function render(){
+  applyLang();const u=session&&me();
+  $('#userChip').classList.toggle('hidden',!u);$('#logoutBtn').classList.toggle('hidden',!u);
+  if(!u){renderLogin();return}
+  $('#userChip').innerHTML=`<span>${esc(u.name)}</span><span style="opacity:.7">· ${t('r_'+u.role)}</span>`;
+  const nav=navFor(u.role);if(!nav.includes(view.name)&&view.name!=='result')view={name:nav[0]};
+  $('#root').innerHTML=`<div class="layout"><nav class="side"><div class="role">${t('r_'+u.role)}</div>
+    ${nav.map(n=>`<a data-nav="${n}" class="${view.name===n||(view.name==='result'&&view.from===n)?'on':''}"><span>${icons[n]}</span>${t('nav_'+n)}</a>`).join('')}
+    <div style="margin-top:18px;padding:0 12px"><button class="btn sm" id="resetBtn" style="width:100%">${t('resetDemo')}</button></div></nav>
+    <main id="main"></main></div><div class="foot">${t('foot')}</div>`;
+  document.querySelectorAll('[data-nav]').forEach(a=>a.onclick=()=>{view={name:a.dataset.nav};render()});
+  $('#resetBtn').onclick=async()=>{db=await seed();pageCache={};save();view={name:navFor(u.role)[0]};toast(t('resetDone'));render()};
+  ({upload:renderUpload,myhistory:()=>renderHistory(true),history:()=>renderHistory(false),queue:renderQueue,users:renderUsers,result:renderResult})[view.name]();
+}
+
+/* ---- login ---- */
+function renderLogin(){
+  $('#root').innerHTML=`<div class="login-wrap"><div class="login">
+   <div class="hero"><h2>${t('heroTitle')}</h2><p>${t('heroText')}</p><ul><li>${t('hero1')}</li><li>${t('hero2')}</li><li>${t('hero3')}</li><li>${t('hero4')}</li></ul></div>
+   <form id="lf"><h1 style="margin-bottom:18px">${t('loginTitle')}</h1>
+    <div class="field"><label class="f">${t('username')}</label><input type="text" id="lu" autocomplete="username" dir="ltr"></div>
+    <div class="field"><label class="f">${t('password')}</label><input type="password" id="lp" autocomplete="current-password" dir="ltr"></div>
+    <div class="err" id="lerr"></div><button class="btn pri" style="width:100%">${t('signin')}</button>
+    <div style="margin-top:20px;font-size:13px;color:var(--mut)">${t('demoAcc')}</div>
+    <div class="demo">${['supervisor','staff','admin'].map(u=>`<button type="button" data-u="${u}"><span class="mono">${u}</span><span>${t('r_'+u)}</span></button>`).join('')}</div>
+   </form></div></div><div class="foot">${t('foot')}</div>`;
+  document.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>{$('#lu').value=b.dataset.u;$('#lp').value='1234';$('#lf').requestSubmit()});
+  $('#lf').onsubmit=async e=>{e.preventDefault();const un=$('#lu').value.trim(),pw=$('#lp').value;const u=db.users.find(x=>x.username===un);
+    if(!u||u.pw!==await sha256('coop:'+un+':'+pw)){$('#lerr').textContent=t('badLogin');return}
+    if(!u.active){$('#lerr').textContent=t('disabledAcc');return}
+    session=u.id;store.set('cv_session',session);view={name:navFor(u.role)[0]};render()};
+}
+
+/* ---- upload ---- */
+let up={src:'sample',form:'eval',edited:true,file:null,sim:'auto',sid:''};
+function renderUpload(){
+  const m=$('#main');
+  m.innerHTML=`<h1>${t('upTitle')}</h1><p class="sub">${t('upSub')}</p>
+  <div class="grid2"><div class="card">
+    <div class="field"><label class="f">${t('src')}</label><div class="seg" id="srcSeg"><button data-v="sample">${t('srcSample')}</button><button data-v="file">${t('srcFile')}</button></div></div>
+    <div id="srcSample">
+      <div class="field"><label class="f">${t('formType')}</label><select id="fType"><option value="start">${t('f_start')}</option><option value="att">${t('f_att')}</option><option value="eval">${t('f_eval')}</option></select></div>
+      <div class="field"><label class="f">${t('scenario')}</label><div class="seg" id="scSeg"><button data-v="0">${t('sc_auth')}</button><button data-v="1">${t('sc_edit')}</button></div></div>
+    </div>
+    <div id="srcFile">
+      <div class="field"><div class="drop" id="drop">${t('dropHint')}</div><input type="file" id="fileIn" accept="application/pdf,.pdf" class="hidden"></div>
+      <div class="field"><label class="f">${t('simMode')}</label><select id="simSel"><option value="auto">${t('sim_auto')}</option><option value="auth">${t('sim_auth')}</option><option value="edit">${t('sim_edit')}</option></select></div>
+    </div>
+    <div class="field"><label class="f">${t('studentId')} <span style="opacity:.7">(${t('studentIdHint')})</span></label><input type="text" id="sid" inputmode="numeric" maxlength="9" dir="ltr" placeholder="444300000"></div>
+    <div class="err" id="uerr"></div>
+    <button class="btn pri" id="goBtn" style="width:100%">${t('analyze')}</button>
+  </div>
+  <div class="card" id="pipe"><h3 style="margin:0 0 6px;font-size:16px">${t('pipeline')}</h3>
+    <ul class="steps">${['hash','conv','tile','unet','score','meta','save'].map(s=>`<li data-s="${s}"><span class="ic"></span><div><div>${t('st_'+s)}</div><div class="d" data-d="${s}">${t('st_'+s+'_d')}</div></div></li>`).join('')}</ul>
+    <div class="bar"><i id="pbar"></i></div><div class="d" style="font-size:12.5px;color:var(--mut);margin-top:6px" id="ptime"></div>
+  </div></div>`;
+  const sync=()=>{document.querySelectorAll('#srcSeg button').forEach(b=>b.classList.toggle('on',b.dataset.v===up.src));
+    document.querySelectorAll('#scSeg button').forEach(b=>b.classList.toggle('on',(b.dataset.v==='1')===up.edited));
+    $('#srcSample').classList.toggle('hidden',up.src!=='sample');$('#srcFile').classList.toggle('hidden',up.src!=='file');
+    $('#fType').value=up.form;$('#simSel').value=up.sim;$('#sid').value=up.sid;
+    const d=$('#drop');d.classList.toggle('has',!!up.file);d.textContent=up.file?('📄 '+up.file.name):t('dropHint')};
+  sync();
+  document.querySelectorAll('#srcSeg button').forEach(b=>b.onclick=()=>{up.src=b.dataset.v;sync()});
+  document.querySelectorAll('#scSeg button').forEach(b=>b.onclick=()=>{up.edited=b.dataset.v==='1';sync()});
+  $('#fType').onchange=e=>up.form=e.target.value;$('#simSel').onchange=e=>up.sim=e.target.value;
+  $('#sid').oninput=e=>{e.target.value=e.target.value.replace(/\D/g,'');up.sid=e.target.value};
+  const pick=f=>{if(!f)return;if(!/\.pdf$/i.test(f.name)&&f.type!=='application/pdf'){$('#uerr').textContent=t('notPdf');return}$('#uerr').textContent='';up.file=f;sync()};
+  $('#drop').onclick=()=>$('#fileIn').click();$('#fileIn').onchange=e=>pick(e.target.files[0]);
+  $('#drop').ondragover=e=>{e.preventDefault()};$('#drop').ondrop=e=>{e.preventDefault();pick(e.dataTransfer.files[0])};
+  $('#goBtn').onclick=runAnalysis;
+}
+async function runAnalysis(){
+  const err=$('#uerr');err.textContent='';
+  if(!/^\d{9}$/.test(up.sid)){err.textContent=t('needId');return}
+  if(up.src==='file'&&!up.file){err.textContent=t('needFile');return}
+  $('#goBtn').disabled=true;document.querySelectorAll('#main input,#main select,#main .seg button').forEach(e=>e.disabled=true);
+  const t0=performance.now();const timer=setInterval(()=>{$('#ptime').textContent=t('elapsed')+': '+((performance.now()-t0)/1000).toFixed(1)+'s'},100);
+  const steps=['hash','conv','tile','unet','score','meta','save'];let si=0;
+  const step=async(name,ms,detail)=>{const li=document.querySelector(`[data-s="${name}"]`);li.classList.add('run');await sleep(ms);li.classList.remove('run');li.classList.add('done');li.querySelector('.ic').textContent='✓';
+    if(detail)li.querySelector('[data-d]').textContent=detail;si++;$('#pbar').style.width=(si/steps.length*100)+'%'};
+  let hash,pagesImg=[],meta,heats=[],fileName,kind,seedN,ok=true;
+  if(up.src==='sample'){
+    kind='sample';seedN=Math.floor(Math.random()*1e9);fileName={start:'start_form',att:'attendance_form',eval:'evaluation_form'}[up.form]+(up.edited?'_v2':'')+'.pdf';
+    hash=await sha256(up.form+up.edited+seedN);
+  }else{
+    kind='pdf';fileName=up.file.name;const buf=await up.file.arrayBuffer();hash=await sha256(buf);
+    seedN=parseInt(hash.slice(0,8),16);
+    var loaded=await loadPdf(buf,fileName);pagesImg=loaded.pages;meta=loaded.meta;ok=loaded.ok;
+  }
+  await step('hash',500,hash.slice(0,16)+'…');
+  const nPages=kind==='sample'?1:pagesImg.length;
+  await step('conv',700,`${nPages} ${t('pagesN')} · 200 DPI · 1654×2339`);
+  await step('tile',500,`${nPages*20} ${t('tilesN')} (4×5 × ${nPages})`);
+  // model
+  let pages;
+  if(kind==='sample'){pages=samplePages(up.form,up.edited,seedN)}
+  else{const r=rng(seedN);let tamper=up.sim==='edit'||(up.sim==='auto'&&(parseInt(hash.slice(8,10),16)%10)<4);if(up.sim==='auth')tamper=false;
+    const tp=tamper?Math.floor(r()*nPages):-1;
+    pages=pagesImg.map((c,i)=>{const regs=i===tp?[{x:.25+r()*.4,y:.3+r()*.45,w:.08+r()*.12,h:.02+r()*.015}]:[];const heat=genHeat(seedN+i*7,regs,.26);return{heat,score:pageScore(heat),img:c}})}
+  await step('unet',900+nPages*250,`U-Net · ${nPages} ${t('pagesN')}`);
+  const scores=pages.map(p=>p.score),score=Math.max(...scores),verdict=score>=THRESH?'suspicious':'authentic';
+  await step('score',400,`max = ${score.toFixed(2)} · ${t('threshold')} = ${THRESH.toFixed(2)}`);
+  if(kind==='sample')meta=sampleMeta(up.form,up.edited,0);
+  await step('meta',400,(meta.producer||meta.creator||'—'));
+  const rec={id:Math.max(0,...db.records.map(r=>r.id))+1,date:new Date().toISOString(),userId:session,studentId:up.sid,fileName,hash,kind,
+    form:kind==='sample'?up.form:null,edited:kind==='sample'?up.edited:null,seed:seedN,pageScores:scores,score,verdict,
+    status:verdict==='suspicious'?'pending':null,imagesKept:verdict==='suspicious',meta:{...meta,pages:meta.pages||nPages},renderOk:ok};
+  db.records.push(rec);save();pageCache[rec.id]=pages;freshId=rec.id;up.file=null;
+  await step('save',400);
+  clearInterval(timer);await sleep(350);
+  view={name:'result',id:rec.id,from:'upload'};render();
+}
+
+/* ---- result ---- */
+let vs={page:0,heat:true,op:.6,tiles:false};
+function getPages(rec){
+  if(pageCache[rec.id])return pageCache[rec.id];
+  if(rec.kind==='sample'){pageCache[rec.id]=samplePages(rec.form,rec.edited,rec.seed);return pageCache[rec.id]}
+  return null;
+}
+function statusBadge(s){return s==='pending'?`<span class="badge b-warn">● ${t('s_pending')}</span>`:s==='auth'?`<span class="badge b-ok">✓ ${t('s_auth')}</span>`:s==='edit'?`<span class="badge b-bad">✕ ${t('s_edit')}</span>`:`<span class="badge b-mut">${t('s_none')}</span>`}
+const verdictBadge=v=>v==='suspicious'?`<span class="badge b-bad">⚠ ${t('suspicious')}</span>`:`<span class="badge b-ok">✓ ${t('authentic')}</span>`;
+const formName=r=>r.form?t('f_'+r.form):'PDF';
+function renderResult(){
+  const rec=db.records.find(r=>r.id===view.id),u=me();if(!rec){view={name:navFor(u.role)[0]};return render()}
+  const owner=db.users.find(x=>x.id===rec.userId);
+  const canSee=rec.imagesKept||freshId===rec.id;const pages=canSee?getPages(rec):null;
+  if(vs.recId!==rec.id){vs={page:0,heat:true,op:.6,tiles:false,recId:rec.id}}
+  const goneMsg=!canSee?(rec.verdict==='authentic'?t('imgGoneAuth'):t('imgGoneClosed')):(!pages?t('imgGoneSession'):'');
+  const isStaff=u.role==='staff',isOwnerSup=u.role==='supervisor'&&rec.userId===u.id;
+  const m=$('#main');
+  m.innerHTML=`<div class="row" style="margin-bottom:14px"><button class="btn sm" id="backBtn">${lang==='ar'?'→':'←'} ${t('back')}</button>
+     ${view.from==='upload'?`<button class="btn sm pri" id="againBtn">${t('newAnalysis')}</button>`:''}
+     <div class="spacer"></div><span class="badge b-mut">${t('simTag')}</span></div>
+  <div class="res"><div>
+    <div class="verdict ${rec.verdict==='suspicious'?'bad':'ok'}">
+      <div style="font-size:30px">${rec.verdict==='suspicious'?'⚠':'✓'}</div>
+      <div><div class="big">${rec.verdict==='suspicious'?t('vSusp'):t('vAuth')}</div><div style="font-size:13.5px;color:var(--mut)">${rec.verdict==='suspicious'?t('vSuspD'):t('vAuthD')}</div></div>
+      <div class="gauge"><div class="n">${rec.score.toFixed(2)}</div><div class="l">${t('docScore')} · ${t('threshold')} ${THRESH.toFixed(2)}</div></div>
+    </div>
+    <div class="card">
+      ${pages?`<div class="pages">${pages.map((p,i)=>`<button data-pg="${i}" class="${i===vs.page?'on':''}">${t('page')} ${i+1}<span class="s" style="color:${p.score>=THRESH?'var(--bad)':'var(--ok)'}">${p.score.toFixed(2)}</span></button>`).join('')}</div>
+      <div class="vtools"><label><input type="checkbox" id="hOn" ${vs.heat?'checked':''}> ${t('showHeat')}</label>
+        <label class="row" style="gap:6px">${t('opacity')} <input type="range" id="hOp" min="0.1" max="1" step="0.05" value="${vs.op}"></label>
+        <label><input type="checkbox" id="tOn" ${vs.tiles?'checked':''}> ${t('showTiles')}</label>
+        <span class="legend">${t('low')} <i></i> ${t('high')}</span></div>
+      ${rec.kind==='pdf'&&rec.renderOk===false?`<div class="note" style="margin:0 0 10px">${t('pdfFail')}</div>`:''}
+      <div class="viewer"><canvas id="cBase"></canvas><canvas class="ov" id="cHeat"></canvas><canvas class="ov" id="cTile"></canvas></div>`
+      :`<div class="empty"><div style="font-size:30px">🗑</div><b>${t('imgGone')}</b><div style="margin-top:6px">${goneMsg}</div></div>`}
+    </div>
+  </div><div>
+    ${isStaff&&rec.verdict==='suspicious'?`<div class="card" style="margin-bottom:16px"><h3 style="margin:0 0 4px;font-size:16px">${t('review')}</h3><p class="sub" style="margin-bottom:12px;font-size:13px">${t('reviewD')}</p>
+      <div class="status-pick">${[['pending','p'],['auth','a'],['edit','e']].map(([s,c])=>`<button class="btn ${c} ${rec.status===s?'on':''}" data-st="${s}">${t('s_'+s)}</button>`).join('')}</div></div>`:''}
+    <div class="card" style="margin-bottom:16px"><h3 style="margin:0 0 12px;font-size:16px">${t('record')}</h3>
+      <dl class="kv">
+        <dt>${t('r_date')}</dt><dd>${fmtDate(rec.date)}</dd>
+        <dt>${t('r_user')}</dt><dd>${esc(owner?owner.name:'—')}</dd>
+        <dt>${t('r_sid')}</dt><dd id="sidCell"><span class="mono">${esc(rec.studentId)}</span> ${isOwnerSup?`<button class="btn sm" id="sidEdit" style="margin-inline-start:6px">${t('editSid')}</button>`:''}</dd>
+        <dt>${t('r_file')}</dt><dd>${esc(rec.fileName)}</dd>
+        <dt>${t('r_form')}</dt><dd>${formName(rec)}</dd>
+        <dt>${t('r_hash')}</dt><dd class="mono">${rec.hash}</dd>
+        <dt>${t('r_verdict')}</dt><dd>${verdictBadge(rec.verdict)}</dd>
+        <dt>${t('r_score')}</dt><dd class="mono">${rec.score.toFixed(3)} (${rec.pageScores.map(s=>s.toFixed(2)).join(' / ')})</dd>
+        <dt>${t('r_status')}</dt><dd>${statusBadge(rec.status)}</dd>
+      </dl></div>
+    <div class="card"><h3 style="margin:0 0 12px;font-size:16px">${t('meta')}</h3>
+      <dl class="kv"><dt>${t('m_creator')}</dt><dd>${esc(rec.meta.creator||'—')}</dd><dt>${t('m_producer')}</dt><dd>${esc(rec.meta.producer||'—')}</dd>
+        <dt>${t('m_created')}</dt><dd>${fmtDate(rec.meta.created)}</dd><dt>${t('m_modified')}</dt><dd>${fmtDate(rec.meta.modified)}</dd><dt>${t('m_pages')}</dt><dd>${rec.meta.pages||rec.pageScores.length}</dd></dl>
+      <div class="note">ℹ ${t('metaNote')}</div></div>
+  </div></div>`;
+  $('#backBtn').onclick=()=>{view={name:view.from==='upload'?navFor(u.role)[1]||navFor(u.role)[0]:view.from};if(u.role==='supervisor'&&view.name==='upload')view.name='myhistory';render()};
+  if($('#againBtn'))$('#againBtn').onclick=()=>{view={name:'upload'};render()};
+  document.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{rec.status=b.dataset.st;rec.imagesKept=rec.status==='pending';if(!rec.imagesKept){delete pageCache[rec.id];if(freshId===rec.id)freshId=null}save();toast(t('statusSaved'));render()});
+  if($('#sidEdit'))$('#sidEdit').onclick=()=>{$('#sidCell').innerHTML=`<span class="inline-edit"><input type="text" id="sidNew" maxlength="9" dir="ltr" value="${esc(rec.studentId)}"><button class="btn sm pri" id="sidOk">${t('save')}</button><button class="btn sm" id="sidNo">${t('cancel')}</button></span>`;
+    $('#sidNew').oninput=e=>e.target.value=e.target.value.replace(/\D/g,'');$('#sidNo').onclick=render;
+    $('#sidOk').onclick=()=>{const v=$('#sidNew').value;if(!/^\d{9}$/.test(v)){toast(t('needId'));return}rec.studentId=v;save();toast(t('sidSaved'));render()}};
+  if(pages){
+    document.querySelectorAll('[data-pg]').forEach(b=>b.onclick=()=>{vs.page=+b.dataset.pg;renderResult()});
+    $('#hOn').onchange=e=>{vs.heat=e.target.checked;drawViewer(pages)};$('#hOp').oninput=e=>{vs.op=+e.target.value;drawViewer(pages)};$('#tOn').onchange=e=>{vs.tiles=e.target.checked;drawViewer(pages)};
+    drawViewer(pages);
+  }
+}
+function drawViewer(pages){
+  const p=pages[vs.page];const base=$('#cBase'),hc=$('#cHeat'),tc=$('#cTile');if(!base)return;
+  let W=PW,H=PH;
+  if(p.img){W=p.img.width;H=p.img.height;base.width=W;base.height=H;base.getContext('2d').drawImage(p.img,0,0)}
+  else{base.width=W;base.height=H;drawForm(base.getContext('2d'),p.form,p.edited)}
+  hc.width=W;hc.height=H;tc.width=W;tc.height=H;
+  const hx=hc.getContext('2d');hx.clearRect(0,0,W,H);
+  if(vs.heat){const sm=document.createElement('canvas');sm.width=HW;sm.height=HH;const sx=sm.getContext('2d');const im=sx.createImageData(HW,HH);
+    for(let i=0;i<HW*HH;i++){const v=p.heat[i];const [r,g,b]=colorize(v);im.data[i*4]=r;im.data[i*4+1]=g;im.data[i*4+2]=b;im.data[i*4+3]=v<.18?0:Math.round(Math.min(1,(v-.18)/.6)*255*vs.op)}
+    sx.putImageData(im,0,0);hx.imageSmoothingEnabled=true;hx.imageSmoothingQuality='high';hx.drawImage(sm,0,0,W,H)}
+  const tx=tc.getContext('2d');tx.clearRect(0,0,W,H);
+  if(vs.tiles){tx.strokeStyle='rgba(14,124,123,.85)';tx.setLineDash([6,5]);tx.lineWidth=1.5;const cw=W/4,ch=H/5;
+    for(let i=1;i<4;i++){tx.beginPath();tx.moveTo(i*cw,0);tx.lineTo(i*cw,H);tx.stroke()}for(let j=1;j<5;j++){tx.beginPath();tx.moveTo(0,j*ch);tx.lineTo(W,j*ch);tx.stroke()}
+    tx.setLineDash([]);tx.font='12px monospace';tx.fillStyle='rgba(14,124,123,.9)';let n=1;for(let j=0;j<5;j++)for(let i=0;i<4;i++)tx.fillText('T'+(n++),i*cw+6,j*ch+16)}
+}
+
+/* ---- history ---- */
+let hf='all';
+function renderHistory(own){
+  const u=me();let recs=db.records.slice().reverse();if(own)recs=recs.filter(r=>r.userId===u.id);
+  const f=hf==='all'?recs:hf==='pending'?recs.filter(r=>r.status==='pending'):recs.filter(r=>r.verdict===hf);
+  $('#main').innerHTML=`<h1>${t('histTitle')}</h1><p class="sub">${own?t('histSubOwn'):t('histSubAll')}</p>
+  <div class="tabs-inline seg">${[['all',t('filterAll')],['suspicious',t('suspicious')],['authentic',t('authentic')],['pending',t('s_pending')]].map(([k,l])=>`<button data-hf="${k}" class="${hf===k?'on':''}">${l}</button>`).join('')}</div>
+  <div class="card" style="padding:0;overflow:auto">${f.length?`<table class="t"><thead><tr><th>${t('r_date')}</th>${own?'':`<th>${t('r_user')}</th>`}<th>${t('r_sid')}</th><th>${t('r_file')}</th><th>${t('r_hash')}</th><th>${t('r_verdict')}</th><th>${t('r_score')}</th><th>${t('r_status')}</th></tr></thead><tbody>
+    ${f.map(r=>`<tr class="click" data-id="${r.id}"><td>${fmtDate(r.date)}</td>${own?'':`<td>${esc((db.users.find(x=>x.id===r.userId)||{}).name||'—')}</td>`}<td class="mono">${esc(r.studentId)}</td><td>${esc(r.fileName)}</td><td class="mono">${r.hash.slice(0,10)}…</td><td>${verdictBadge(r.verdict)}</td><td class="mono">${r.score.toFixed(2)}</td><td>${statusBadge(r.status)}</td></tr>`).join('')}
+  </tbody></table>`:`<div class="empty">${t('noRecords')}</div>`}</div>`;
+  document.querySelectorAll('[data-hf]').forEach(b=>b.onclick=()=>{hf=b.dataset.hf;renderHistory(own)});
+  document.querySelectorAll('tr[data-id]').forEach(tr=>tr.onclick=()=>{view={name:'result',id:+tr.dataset.id,from:own?'myhistory':'history'};render()});
+}
+
+/* ---- queue (staff) ---- */
+function renderQueue(){
+  const R=db.records,susp=R.filter(r=>r.verdict==='suspicious');const pend=susp.filter(r=>r.status==='pending');
+  const list=[...pend.slice().reverse(),...susp.filter(r=>r.status!=='pending').reverse()];
+  $('#main').innerHTML=`<h1>${t('qTitle')}</h1><p class="sub">${t('qSub')}</p>
+  <div class="kpis"><div class="kpi"><div class="v">${R.length}</div><div class="l">${t('k_total')}</div></div>
+   <div class="kpi"><div class="v" style="color:var(--bad)">${susp.length}</div><div class="l">${t('k_susp')}</div></div>
+   <div class="kpi"><div class="v" style="color:var(--warn)">${pend.length}</div><div class="l">${t('k_pending')}</div></div>
+   <div class="kpi"><div class="v" style="color:var(--ok)">${susp.length-pend.length}</div><div class="l">${t('k_closed')}</div></div></div>
+  <div class="card" style="padding:0;overflow:auto">${list.length?`<table class="t"><thead><tr><th>${t('r_date')}</th><th>${t('r_user')}</th><th>${t('r_sid')}</th><th>${t('r_form')}</th><th>${t('r_score')}</th><th>${t('r_status')}</th><th></th></tr></thead><tbody>
+   ${list.map(r=>`<tr class="click" data-id="${r.id}"><td>${fmtDate(r.date)}</td><td>${esc((db.users.find(x=>x.id===r.userId)||{}).name||'—')}</td><td class="mono">${esc(r.studentId)}</td><td>${formName(r)}</td><td class="mono" style="color:var(--bad)">${r.score.toFixed(2)}</td><td>${statusBadge(r.status)}</td><td><button class="btn sm">${t('open')}</button></td></tr>`).join('')}
+  </tbody></table>`:`<div class="empty">${t('noRecords')}</div>`}</div>`;
+  document.querySelectorAll('tr[data-id]').forEach(tr=>tr.onclick=()=>{view={name:'result',id:+tr.dataset.id,from:'queue'};render()});
+}
+
+/* ---- users (admin) ---- */
+function renderUsers(){
+  const u=me();
+  $('#main').innerHTML=`<h1>${t('uTitle')}</h1><p class="sub">${t('uSub')}</p>
+  <div class="card" style="margin-bottom:16px"><h3 style="margin:0 0 12px;font-size:16px">${t('addUser')}</h3>
+   <form id="uf" class="row" style="align-items:flex-end">
+    <div style="flex:1.3;min-width:160px"><label class="f">${t('u_name')}</label><input type="text" id="nName"></div>
+    <div style="flex:1;min-width:130px"><label class="f">${t('u_user')}</label><input type="text" id="nUser" dir="ltr"></div>
+    <div style="flex:1;min-width:120px"><label class="f">${t('password')}</label><input type="password" id="nPw" dir="ltr"></div>
+    <div style="flex:1;min-width:150px"><label class="f">${t('u_role')}</label><select id="nRole">${['supervisor','staff','admin'].map(r=>`<option value="${r}">${t('r_'+r)}</option>`).join('')}</select></div>
+    <button class="btn pri">${t('create')}</button></form><div class="err" id="ferr" style="margin-top:8px"></div></div>
+  <div class="card" style="padding:0;overflow:auto"><table class="t"><thead><tr><th>${t('u_name')}</th><th>${t('u_user')}</th><th>${t('u_role')}</th><th>${t('u_hash')}</th><th>${t('u_state')}</th><th>${t('u_act')}</th></tr></thead><tbody>
+   ${db.users.map(x=>`<tr><td>${esc(x.name)}</td><td class="mono">${esc(x.username)}</td>
+     <td><select data-role="${x.id}" style="width:auto;padding:5px 8px">${['supervisor','staff','admin'].map(r=>`<option value="${r}" ${x.role===r?'selected':''}>${t('r_'+r)}</option>`).join('')}</select></td>
+     <td class="mono" title="${x.pw}">${x.pw.slice(0,14)}…</td>
+     <td>${x.active?`<span class="badge b-ok">${t('active')}</span>`:`<span class="badge b-mut">${t('disabled')}</span>`}</td>
+     <td><button class="btn sm ${x.active?'danger':''}" data-tog="${x.id}">${x.active?t('disable'):t('enable')}</button></td></tr>`).join('')}
+  </tbody></table></div>`;
+  $('#uf').onsubmit=async e=>{e.preventDefault();const n=$('#nName').value.trim(),un=$('#nUser').value.trim(),pw=$('#nPw').value,r=$('#nRole').value;
+    if(!n||!un||!pw){$('#ferr').textContent=t('fillAll');return}if(db.users.some(x=>x.username===un)){$('#ferr').textContent=t('userExists');return}
+    db.users.push({id:db.nextUser++,name:n,username:un,role:r,active:true,pw:await sha256('coop:'+un+':'+pw)});save();toast(t('userCreated'));renderUsers()};
+  document.querySelectorAll('[data-role]').forEach(s=>s.onchange=()=>{const x=db.users.find(y=>y.id===+s.dataset.role);x.role=s.value;save();toast('✓');if(x.id===u.id)render()});
+  document.querySelectorAll('[data-tog]').forEach(b=>b.onclick=()=>{const x=db.users.find(y=>y.id===+b.dataset.tog);if(x.id===u.id){toast(t('cantSelf'));return}x.active=!x.active;save();renderUsers()});
+}
+
+/* ============ boot ============ */
+$('#langBtn').onclick=()=>{lang=lang==='ar'?'en':'ar';store.set('cv_lang',lang);render()};
+$('#logoutBtn').onclick=()=>{session=null;store.set('cv_session',null);freshId=null;render()};
+(async()=>{
+  lang=store.get('cv_lang')||'ar';
+  try{await document.fonts.load('16px "IBM Plex Sans Arabic"');await document.fonts.load('700 16px "IBM Plex Sans Arabic"')}catch(e){}
+  db=store.get('cv_db');if(!db||!db.users)db=await seed(),save();
+  const s=store.get('cv_session');if(s&&db.users.some(u=>u.id===s&&u.active))session=s;
+  render();
+})();
+</script>
+</body>
+</html>
